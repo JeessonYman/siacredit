@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIA-Credit | Intranet Asesores</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { margin: 0; background: linear-gradient(-45deg, #00152b, #003366, #004b87, #00152b); background-size: 400% 400%; animation: bg 20s ease infinite; font-family: 'Segoe UI', Tahoma, sans-serif; color: white; min-height: 100vh; }
+        @keyframes bg { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        header { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); flex-wrap: wrap; gap: 10px; }
+        .asesor-info span { color: #f1c40f; font-weight: bold; }
+        .container { padding: 20px; max-width: 1400px; margin: auto; }
+        
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 5px; }
+        .badge-apto { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+        .badge-rechazo { background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; }
+        
+        .btn-mariam { background: linear-gradient(90deg, #8e44ad, #9b59b6); border: none; color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; margin-bottom: 5px; }
+        .btn-chat { background: linear-gradient(90deg, #2980b9, #3498db); border: none; color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; width: 100%; }
+        
+        .swal-glass { background: rgba(10, 25, 47, 0.95) !important; backdrop-filter: blur(15px) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: white !important; }
+        .report-section { text-align: left; font-size: 14px; line-height: 1.6; }
+        .report-header { border-bottom: 1px solid; margin-bottom: 8px; margin-top: 15px; padding-bottom: 4px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <header>
+        <div><strong>SIA-Credit Admin</strong></div>
+        <div class="asesor-info">
+            Bienvenido(a), <span th:text="${nombreAsesor}">Asesor</span> 
+            <a href="/logout" style="color:#ff6b81; margin-left: 15px; text-decoration: none; font-weight: bold;">[Salir]</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2>Evaluaciones Multimodales (M.A.R.I.A.M.)</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente (KYC)</th>
+                        <th>Contacto</th>
+                        <th>Cruce de Direcciones (RENIEC vs Recibo)</th>
+                        <th>Veredicto y Score</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${lista}">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <img th:src="${p.fotoUrl}" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #82ccdd;">
+                                <div>
+                                    <div th:text="${p.nombreCompleto}" style="font-weight: bold; font-size: 13px;"></div>
+                                    <div style="font-size: 11px; color: #aaa;">DNI: <span th:text="${p.dni}"></span></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-size: 12px;">📞 <span th:text="${p.whatsapp}"></span></div>
+                            <div style="font-size: 11px; color: #f1c40f;">📅 <span th:text="${p.fechaNacimiento}"></span></div>
+                        </td>
+                        <td>
+                            <div style="font-size: 11px; color: #82ccdd; margin-bottom: 4px;">
+                                📍 <b>RENIEC:</b> <span th:text="${p.direccionReniec}"></span>
+                            </div>
+                            <div style="font-size: 11px; color: #f1c40f;">
+                                📄 <b>RECIBO (IA):</b> <span th:text="${p.direccionOcr}"></span>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-size: 16px; font-weight: bold;">SBS: <span th:text="${p.scoreSbs}"></span>/100</div>
+                            <span th:if="${p.estado == 'PRE_APROBADO'}" class="badge badge-apto">✓ APROBADO</span>
+                            <span th:if="${p.estado == 'RECHAZADO'}" class="badge badge-rechazo">✗ RECHAZADO</span>
+                        </td>
+                        <td>
+                            <button class="btn-mariam" th:onclick="verReporteTecnico([[${p.nombres}]], [[${p.apellidos}]], [[${p.fechaNacimiento}]], [[${p.departamento}]], [[${p.provincia}]], [[${p.distrito}]], [[${p.ubigeo}]], [[${p.urlMaps}]], [[${p.prestamosRecientes}]], [[${p.recomendacionMariam}]], [[${p.direccionReniec}]], [[${p.direccionOcr}]])">📋 Reporte Técnico</button>
+                            <button class="btn-chat" th:onclick="chatearConMariam([[${p.dni}]], [[${p.nombreCompleto}]])">💬 Preguntar</button>
+                        </td>
+                        <td>
+                            <div style="font-size: 12px;">📞 <span th:text="${p.whatsapp}"></span></div>
+                            <div style="font-size: 11px; color: #f1c40f;">💰 S/ <span th:text="${p.montoPropuesto}"></span> a <span th:text="${p.cuotas}"></span> meses</div>
+                            <a th:href="'https://wa.me/51' + ${p.whatsapp} + '?text=Hola+' + ${p.nombres} + ',+soy+tu+asesora+de+Caja+Trujillo.+Tu+crédito+fue+pre-aprobado.'" 
+                               target="_blank" 
+                               style="display: inline-block; margin-top: 5px; padding: 4px 8px; background: #25D366; color: white; border-radius: 5px; text-decoration: none; font-size: 10px; font-weight: bold;">
+                                Abrir WhatsApp
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function verReporteTecnico(nom, ape, nac, dep, prov, dist, ubigeo, urlMap, prestamos, reco, dirReniec, dirOcr) {
+            const htmlReport = `
+                <div class="report-section">
+                    <div class="report-header" style="color: #82ccdd; border-color: #82ccdd;">👤 Identidad Validada (RENIEC)</div>
+                    <b>Nombres:</b> ${nom}<br>
+                    <b>Apellidos:</b> ${ape}<br>
+                    <b>Nacimiento:</b> ${nac}<br>
+
+                    <div class="report-header" style="color: #f1c40f; border-color: #f1c40f;">📍 Cruce de Geolocalización</div>
+                    <b>RENIEC (Oficial):</b> <span style="color:#82ccdd">${dirReniec}</span><br>
+                    <b>RECIBO (Leído por IA):</b> <span style="color:#f1c40f">${dirOcr}</span><br>
+                    <hr style="border: 0.5px solid rgba(255,255,255,0.1); margin: 8px 0;">
+                    <b>Ubicación:</b> ${dep} - ${prov} - ${dist} (Ubigeo: ${ubigeo})<br>
+                    <a href="${urlMap}" target="_blank" style="display:inline-block; margin-top:10px; padding:6px 12px; background:#27ae60; color:white; text-decoration:none; border-radius:5px; font-weight:bold; font-size:12px;">🗺️ Abrir en Google Maps</a>
+
+                    <div class="report-header" style="color: #e74c3c; border-color: #e74c3c;">📊 Análisis Financiero (SBS)</div>
+                    <b>Estado:</b> ${prestamos}<br>
+
+                    <div class="report-header" style="color: #9b59b6; border-color: #9b59b6;">🤖 Auditoría de MARIAM (IA)</div>
+                    <p style="margin-top: 5px;">${reco}</p>
+                </div>
+            `;
+            Swal.fire({ title: 'Reporte Técnico Integral', html: htmlReport, icon: 'info', customClass: {popup: 'swal-glass'} });
+        }
+
+        async function chatearConMariam(dni, nombre) {
+            const { value: mensaje } = await Swal.fire({
+                title: `💬 Asistente IA`,
+                input: 'text',
+                inputLabel: `Analizando DNI: ${dni}`,
+                inputPlaceholder: 'Pregunta sobre el cliente...',
+                showCancelButton: true,
+                confirmButtonText: 'Consultar',
+                customClass: {popup: 'swal-glass'}
+            });
+
+            if (mensaje) {
+                Swal.fire({title: 'Procesando...', text: 'Conectando con MARIAM (MoE)...', allowOutsideClick: false, customClass: {popup: 'swal-glass'}});
+                Swal.showLoading();
+
+                const formData = new URLSearchParams();
+                formData.append("mensaje", mensaje);
+                formData.append("dni", dni);
+
+                fetch('/api/chat-mariam', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
+                })
+                .then(response => response.text())
+                .then(data => {
+                    Swal.fire({title: 'MARIAM', text: data, icon: 'success', customClass: {popup: 'swal-glass'}});
+                })
+                .catch(error => {
+                    Swal.fire('Error', 'Fallo de conexión', 'error');
+                });
+            }
+        }
+    </script>
+</body>
+</html>

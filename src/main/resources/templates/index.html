@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIA-Credit | Caja Trujillo</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { margin: 0; background: linear-gradient(-45deg, #003366, #d11222, #001f3f); background-size: 400% 400%; animation: bg 15s ease infinite; min-height: 100vh; display: flex; justify-content: center; align-items: center; font-family: 'Segoe UI', sans-serif; color: #fff; padding: 15px; box-sizing: border-box; }
+        @keyframes bg { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        .glass-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); text-align: center; box-sizing: border-box; }
+        h1 { margin-bottom: 5px; font-size: 26px; }
+        .subtitle { margin-bottom: 20px; font-size: 14px; opacity: 0.9; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        
+        /* CORRECCIÓN: Se agregó input[type="number"] a los estilos generales */
+        input[type="text"], input[type="number"], input[type="file"] { width: 100%; padding: 12px; box-sizing: border-box; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 10px; color: white; outline: none; font-size: 14px; transition: 0.3s; }
+        input::placeholder { color: rgba(255,255,255,0.7); }
+        input:focus { background: rgba(255,255,255,0.25); border-color: #fff; }
+        
+        /* CORRECCIÓN: Ocultar las flechitas por defecto de los campos numéricos para mantener la elegancia */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        button { width: 100%; padding: 14px; margin-top: 5px; background: #d11222; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #b00f1d; }
+    </style>
+</head>
+<body>
+    <div class="glass-card">
+        <h1>SIA-Credit</h1>
+        <p class="subtitle">Evaluación Inteligente por M.A.R.I.A.M.</p>
+        <form action="/solicitar" method="POST" enctype="multipart/form-data" onsubmit="Swal.fire({title:'Analizando...', text:'MARIAM está procesando los documentos', allowOutsideClick:false, didOpen:()=>{Swal.showLoading()}});">
+            <div class="input-group">
+                <input type="text" name="dni" placeholder="Ingrese su DNI" maxlength="8" required>
+            </div>
+            <div class="input-group">
+                <input type="text" name="whatsapp" placeholder="Su número de WhatsApp" maxlength="9" required>
+            </div>
+            <div class="input-group">
+                <label style="font-size: 12px; margin-left: 5px; display:block; margin-bottom: 5px;">Recibo (Imagen o PDF):</label>
+                <input type="file" name="recibo" accept="image/png, image/jpeg, application/pdf" required>
+            </div>
+            <div class="input-group">
+                <input type="number" name="monto" placeholder="Monto solicitado (Ej: 5000)" required>
+            </div>
+            <div class="input-group">
+                <input type="number" name="cuotas" placeholder="Plazo en meses (Ej: 12)" required>
+            </div>
+            <button type="submit">Iniciar Evaluación</button>
+        </form>
+    </div>
+
+    <script th:if="${p != null}">
+        const estado = "[[${p.estado}]]";
+        const reco = "[[${p.recomendacionMariam}]]";
+        if(estado === 'PRE_APROBADO') {
+            Swal.fire({ title: '✅ ¡Aprobado!', text: 'MARIAM ha verificado tu perfil. La asesora se comunicará pronto.', icon: 'success', confirmButtonColor: '#003366' });
+        } else {
+            Swal.fire({ title: '❌ Evaluación Detenida', text: reco, icon: 'error', confirmButtonColor: '#d11222' });
+        }
+    </script>
+</body>
+</html>
